@@ -57,12 +57,16 @@ This generates `BATCH_SCHEDULE.md`:
 ## Pipeline
 
 ```
-Stage 1     Stage 2      Stage 3         Stage 3.5       Stage 4         Stage 5        Stage 6          Stage 7      Stage 8
-Research → Concepts → Originality →   Bridge     →  Write Each  → Review Each → Improve Each → Illustrate → Export All
-(5 min)    (5 min)    (5 min)       (5 min)       (5 min each)  (10 min each)  (5 min each)   (3 min each) (2 min)
+Stage 1     Stage 2      Stage 3         Stage 3.5       Stage 4         Stage 5        Stage 6
+Research → Concepts → Originality →   Bridge     →  Write Each  → Review Each → Improve Each →
+(5 min)    (5 min)    (5 min)       (5 min)       (5 min each)  (10 min each)  (5 min each)
+
+ Stage 7            Stage 8            Stage 9       Stage 10      Stage 11
+→ Char Bible  →  Illustrate Each  →  Layout Each  → Export All → Series Wrap
+  (10 min)       (5 min each)       (5 min each)    (2 min)      (5 min)
 ```
 
-**Total for 10 stories: ~4-5 hours. Perfect for overnight.**
+**Total for 10 stories: ~6-7 hours. Perfect for overnight.**
 
 ### Stage 1: Research
 
@@ -129,22 +133,49 @@ For each reviewed story that scored < 9/10:
 Output: `stories/[title-slug]_v2_improved.md`. 2 rounds of craft-focused polishing.
 Skip if story already scored >= 9/10 after review (diminishing returns).
 
-### Stage 7: Illustration Prompts (batch)
+### Stage 7: Character Bible (batch)
+
+For each approved story (or series), create character bible:
+```
+/story-character-bible "stories/[title-slug]_v2_improved.md"
+```
+
+Output: `characters/[slug]/` with style-lock prompts, anchor image prompts, color palettes.
+
+### Stage 8: Illustration (batch)
 
 For each approved story (latest version):
 ```
 /story-illustrate "stories/[title-slug]_v2_improved.md"
 ```
 
-Output: `illustrations/[slug]/` with Midjourney prompts per scene.
+Output: `illustrations/[slug]/spreads/` with actual generated images + QC reports.
 
-### Stage 8: Export
+### Stage 9: Layout (batch)
+
+For each illustrated story:
+```
+/story-layout "stories/[title-slug]_v2_improved.md"
+```
+
+Output: `output/[slug]/` with fixed-layout EPUB + print-ready PDF with bleed.
+
+### Stage 10: Export
 
 ```
 /story-export "output/approved/"
 ```
 
-Output: EPUB files + KDP metadata for each story.
+Output: KDP-compliant metadata, AI disclosure, descriptions, pricing strategy.
+
+### Stage 11: Series (optional)
+
+If batch is part of a series:
+```
+/story-series "[series-name]"
+```
+
+Output: Series bible, sequel hooks, Amazon A+ content, branding guidelines.
 
 ### Final Report
 
@@ -166,8 +197,11 @@ Output: EPUB files + KDP metadata for each story.
 | Writing | ✅ | 9 stories drafted (v0) |
 | Review | ✅ | 9 reviewed (v1), avg 7.8/10 |
 | Improve | ✅ | 7 improved (v2), avg 9.1/10 |
-| Illustration | ✅ | 72 scene prompts generated |
-| Export | ✅ | 9 EPUBs ready |
+| Char Bible | ✅ | 9 character bibles created |
+| Illustration | ✅ | 126 images generated (14 spreads × 9) |
+| Layout | ✅ | 9 print-ready PDFs + EPUBs |
+| Export | ✅ | 9 KDP packages ready |
+| Series | ✅ | Series bible + sequel hooks |
 
 ## Stories Produced
 

@@ -59,22 +59,32 @@ Add to `~/.claude/settings.json`:
 mcp__llm-chat__chat:
   system: "You are a children's book editor specializing in bedtime stories."
   prompt: |
+    You are a senior children's book editor at a major publishing house.
+    You've edited 200+ bestselling picture books.
     Review this bedtime story for ages [TARGET_AGE].
 
     [Full story text]
 
-    Score 1-10 on each:
-    1. Age-appropriateness (vocabulary, concepts)
-    2. Emotional arc (winds down to sleepy?)
-    3. Readability (sentence length, complexity)
-    4. Engagement (would a child ask again?)
-    5. Moral clarity (lesson present, not preachy?)
-    6. Illustration potential (clear visual scenes?)
-    7. Parent appeal (enjoy reading aloud?)
-    8. Bedtime suitability (calming, not stimulating?)
+    ## SAFETY GATE (Pass/Fail):
+    - No violence, death, injury, or scary content
+    - Vocabulary appropriate for target age
+    - Ending is peaceful and calming
+    - No abandonment or anxiety themes
 
-    Overall score: X/10
-    Verdict: READY / ALMOST / NEEDS WORK
+    ## CRAFT SCORING (1-10 each):
+    1. Read-aloud rhythm — musical stress patterns, no stumbles?
+    2. Sound design — onomatopoeia, alliteration, mouth-feel words?
+    3. Refrain strength — repeating phrase that gains power each time?
+    4. Show-don't-tell — emotions as physical sensation, not stated?
+    5. Page-turn anticipation — each spread ends with a hook?
+    6. Character distinctiveness — memorable in 5 words?
+    7. Re-read gravity — child says "again!", parent survives reading #50?
+    8. Visual filmability — illustrator can see exactly what to draw?
+    9. Wind-down quality — final 3 spreads descend, last line passes whisper test?
+    10. Golden line — one line good enough to whisper as child falls asleep?
+
+    Overall craft score: X/10
+    Verdict: PUBLISH / ALMOST / NEEDS CRAFT WORK
     Specific fixes (ranked by impact):
 ```
 
@@ -179,10 +189,10 @@ Update `REVIEW_STATE.json` with current state AND updated conversation history.
 ```markdown
 ## Score Progression: "[Story Title]" (LLM: {model_name})
 
-| Round | Time | Age | Arc | Read | Engage | Moral | Illust | Parent | Bedtime | Overall | Δ |
-|-------|------|-----|-----|------|--------|-------|--------|--------|---------|---------|---|
-| R0 draft | HH:MM | X | X | X | X | X | X | X | X | X.X | — |
-| R1 review | HH:MM | X | X | X | X | X | X | X | X | X.X | +X.X |
+| Round | Time | Rhythm | Sound | Refrain | Show | PageTurn | Char | Reread | Visual | Wind | Gold | Overall | Δ |
+|-------|------|--------|-------|---------|------|----------|------|--------|--------|------|------|---------|---|
+| R0 draft | HH:MM | X | X | X | X | X | X | X | X | X | X | X.X | — |
+| R1 review | HH:MM | X | X | X | X | X | X | X | X | X | X | X.X | +X.X |
 ```
 
 Include the model name so we can compare quality across providers.

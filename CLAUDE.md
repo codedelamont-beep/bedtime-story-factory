@@ -59,11 +59,14 @@ graph LR
 | `/story-concept "theme"` | 1 only | Generate concepts |
 | `/story-bridge` | 1.5 only | Validate concepts before writing |
 | `/story-writing "concept"` | 2 only | Write a single story |
-| `/story-review "file.md"` | 3a only | Review and score |
-| `/story-review-llm "file.md"` | 3a only | Review via cheap LLM |
-| `/story-improvement-loop "file.md"` | 3b only | Multi-round polishing |
-| `/story-illustrate "file.md"` | 4 only | Generate illustration prompts |
-| `/story-export` | 4 only | EPUB + KDP export |
+| `/story-review "file.md"` | 3a only | Review with craft criteria |
+| `/story-review-llm "file.md"` | 3a only | Review via cheap LLM (craft criteria) |
+| `/story-improvement-loop "file.md"` | 3b only | Multi-round craft polishing |
+| `/story-character-bible "file.md"` | 4a only | Anchor images + style lock |
+| `/story-illustrate "file.md"` | 4b only | Generate actual illustrations |
+| `/story-layout "file.md"` | 4c only | Fixed-layout EPUB + print PDF |
+| `/story-export` | 4d only | KDP-compliant export |
+| `/story-series "name"` | S only | Series bible + sequel hooks |
 | `/story-notify "msg"` | Notify | Send LINE push notification |
 | `/story-analytics` | Analytics | Production dashboard |
 
@@ -144,20 +147,25 @@ When `HUMAN_CHECKPOINT = false` (default): auto-proceed with all fixes.
 ```
 bedtime-story-factory/
 ├── CLAUDE.md              ← You are here (agent instructions)
-├── skills/                ← 13 SKILL.md files (the brain)
+├── skills/                ← 16 SKILL.md files (the brain)
 │   ├── story-research/        Workflow 1: market research
 │   ├── story-concept/         Workflow 1: concept generation
 │   ├── originality-check/     Workflow 1: deduplication
 │   ├── story-bridge/          Workflow 1.5: concept validation
-│   ├── story-writing/         Workflow 2: full story generation
-│   ├── story-review/          Workflow 3a: autonomous review
-│   ├── story-review-llm/      Workflow 3a: cheap LLM review
-│   ├── story-improvement-loop/ Workflow 3b: prose polishing
-│   ├── story-illustrate/      Workflow 4: illustration prompts
-│   ├── story-export/          Workflow 4: EPUB + KDP
+│   ├── story-writing/         Workflow 2: craft-driven story generation
+│   ├── story-review/          Workflow 3a: craft-focused review (10 criteria)
+│   ├── story-review-llm/      Workflow 3a: cheap LLM review (same criteria)
+│   ├── story-improvement-loop/ Workflow 3b: craft polishing
+│   ├── story-character-bible/  Workflow 4a: anchor images + style lock
+│   ├── story-illustrate/      Workflow 4b: actual image generation + QC
+│   ├── story-layout/          Workflow 4c: fixed-layout EPUB + print PDF
+│   ├── story-export/          Workflow 4d: KDP-compliant export
+│   ├── story-series/          Workflow S: multi-book production
 │   ├── story-notify/          LINE push notifications
 │   ├── story-analytics/       Production dashboard
 │   └── story-pipeline/        Full overnight orchestrator
+├── references/            ← Craft reference guides
+│   └── CRAFT_GUIDE.md         10 craft techniques for bestseller quality
 ├── mcp-servers/           ← MCP server implementations
 │   ├── llm-chat/              Cross-model review
 │   └── line-notify/           LINE Notify API
@@ -176,16 +184,17 @@ bedtime-story-factory/
 
 ## Score Progression Tracking
 
-Each story's review history is tracked in `SCORE_TRACKER.md`:
+Each story's review history is tracked in `SCORE_TRACKER.md` using **10 craft criteria** consistent across all review skills:
 
 ```markdown
 ## Score Progression: "Brave Little Dragon"
 
-| Round | Time | Age | Arc | Read | Engage | Moral | Illust | Parent | Bedtime | Overall | Δ |
-|-------|------|-----|-----|------|--------|-------|--------|--------|---------|---------|---|
-| R0 draft | 22:15 | 6 | 5 | 7 | 6 | 5 | 7 | 6 | 4 | 5.8 | — |
-| R1 review | 22:30 | 8 | 7 | 8 | 7 | 7 | 8 | 7 | 7 | 7.4 | +1.6 |
-| R2 improve | 22:45 | 9 | 9 | 9 | 8 | 8 | 9 | 8 | 9 | 8.6 | +1.2 |
+| Round | Time | Rhythm | Sound | Refrain | Show | PageTurn | Char | Reread | Visual | Wind | Gold | Overall | Δ |
+|-------|------|--------|-------|---------|------|----------|------|--------|--------|------|------|---------|---|
+| R0 draft | 22:15 | 4 | 3 | 2 | 5 | 4 | 5 | 4 | 6 | 3 | 2 | 3.8 | — |
+| R1 review | 22:30 | 7 | 6 | 6 | 7 | 6 | 7 | 6 | 7 | 6 | 5 | 6.3 | +2.5 |
+| R2 improve | 22:45 | 9 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 8 | 7 | 8.0 | +1.7 |
+| R3 polish | 23:00 | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 8 | 8.9 | +0.9 |
 ```
 
 This enables overnight batch analysis: which stories improved most, which criteria are consistently weak, and where to focus future writing prompts.
@@ -193,11 +202,12 @@ This enables overnight batch analysis: which stories improved most, which criter
 ## Production At a Glance
 
 ```
-Skills:     13 (12 story skills + 1 analytics)
+Skills:     16 (15 story skills + 1 analytics)
+References: 1 (CRAFT_GUIDE.md — 10 craft techniques)
 MCP servers: 2 (llm-chat + line-notify)
 Docs:        4 guides
 Styles:      1 EPUB stylesheet
-Pipeline:    8 stages, overnight-ready
+Pipeline:    11 stages, overnight-ready
 Recovery:    state files + idempotent stage checks
 Monitoring:  LINE Notify + NOTIFICATION_LOG.md
 ```

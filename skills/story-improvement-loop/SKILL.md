@@ -91,22 +91,24 @@ Previous scores:
 Send to REVIEWER_MODEL with a **different focus** than the first review:
 
 ```
-You are a bestselling children's book author reviewing a bedtime story.
-This story has already passed basic quality checks (vocabulary, safety, readability).
+You are a bestselling children's book author and craft editor.
+This story has already passed basic review checks.
 
-Now focus on CRAFT:
+Now focus on CRAFT refinement using the same 10 criteria:
 
 [Full story text]
 
 Score 1-10 on each:
-1. **Rhythm & flow** — Does it read aloud naturally? Musical pacing?
-2. **Sensory richness** — Can the child see, hear, feel the world?
-3. **Character voice** — Does the main character feel alive and distinct?
-4. **Emotional resonance** — Would the child feel something genuine?
-5. **Parent enjoyment** — Would the adult reading this smile?
-6. **Re-read factor** — Would the child say "again! again!"?
-7. **Sleepy landing** — Does it genuinely wind down to peaceful sleep?
-8. **Memorable moment** — Is there one line/scene they'll remember tomorrow?
+1. **Read-aloud rhythm** — Musical stress patterns? No stumbles when tired?
+2. **Sound design** — Onomatopoeia, alliteration, mouth-feel words?
+3. **Refrain strength** — Repeating phrase that gains emotional power?
+4. **Show-don't-tell** — Emotions as physical sensation, not stated?
+5. **Page-turn anticipation** — Each spread ends with curiosity/tension?
+6. **Character distinctiveness** — Describable in 5 words? Unique voice?
+7. **Re-read gravity** — Child says "again!" Parent survives reading #50?
+8. **Visual filmability** — Illustrator can see exactly what to draw?
+9. **Wind-down quality** — Final 3 spreads descend? Whisper test passes?
+10. **Golden line** — One line good enough to tattoo on a nursery wall?
 
 Overall: X/10
 Verdict: PUBLISH / ALMOST / NEEDS POLISH
@@ -202,11 +204,11 @@ Append to `SCORE_TRACKER.md`:
 ```markdown
 ## Score Progression: "[Story Title]" (Improvement Loop)
 
-| Round | Time | Rhythm | Sensory | Voice | Emotion | Parent | Re-read | Sleepy | Memorable | Overall | Δ |
-|-------|------|--------|---------|-------|---------|--------|---------|--------|-----------|---------|---|
-| R1 review input | — | — | — | — | — | — | — | — | — | 7.4 | — |
-| R2 improve-1 | HH:MM | X | X | X | X | X | X | X | X | X.X | +X.X |
-| R3 improve-2 | HH:MM | X | X | X | X | X | X | X | X | X.X | +X.X |
+| Round | Time | Rhythm | Sound | Refrain | Show | PageTurn | Char | Reread | Visual | Wind | Gold | Overall | Δ |
+|-------|------|--------|-------|---------|------|----------|------|--------|--------|------|------|---------|---|
+| R1 review input | — | — | — | — | — | — | — | — | — | — | — | 7.4 | — |
+| R2 improve-1 | HH:MM | X | X | X | X | X | X | X | X | X | X | X.X | +X.X |
+| R3 improve-2 | HH:MM | X | X | X | X | X | X | X | X | X | X | X.X | +X.X |
 ```
 
 ### Step 8: Document Results
