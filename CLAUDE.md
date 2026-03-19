@@ -14,10 +14,13 @@ Skills compose into **numbered workflows** that chain into a full production pip
 Workflow 1: Discovery            /story-research → /story-concept → /originality-check
 Workflow 1.5: Bridge             /story-bridge (validates concepts before writing)
 Workflow 2: Production           /story-writing (batch, one per concept)
-Workflow 3: Quality              /story-review → /story-improvement-loop
+Workflow 3a: Review              /story-review OR /story-review-llm
+Workflow 3b: Polish              /story-improvement-loop
 Workflow 4: Output               /story-illustrate → /story-export
+Workflow N: Notify               /story-notify (called throughout by other skills)
+Workflow A: Analytics            /story-analytics (run anytime for dashboard)
 
-Full Pipeline: /story-pipeline   chains Workflow 1 → 1.5 → 2 → 3 → 4
+Full Pipeline: /story-pipeline   chains Workflow 1 → 1.5 → 2 → 3a → 3b → 4
 ```
 
 ```mermaid
@@ -32,9 +35,15 @@ graph LR
     G --> H["/story-illustrate"]
     H --> I["/story-export"]
     
+    N["/story-notify"] -.->|"📱 called by"| D
+    N -.->|"📱 called by"| F
+    N -.->|"📱 called by"| G
+    N -.->|"📱 called by"| I
+    
     style D fill:#f9a825,stroke:#333
     style F fill:#42a5f5,stroke:#333
     style G fill:#42a5f5,stroke:#333
+    style N fill:#66bb6a,stroke:#333
 ```
 
 ## Quick Commands
@@ -46,11 +55,13 @@ graph LR
 | `/story-concept "theme"` | 1 only | Generate concepts |
 | `/story-bridge` | 1.5 only | Validate concepts before writing |
 | `/story-writing "concept"` | 2 only | Write a single story |
-| `/story-review "file.md"` | 3 only | Review and score |
-| `/story-review-llm "file.md"` | 3 only | Review via cheap LLM |
-| `/story-improvement-loop "file.md"` | 3 only | Multi-round polishing |
+| `/story-review "file.md"` | 3a only | Review and score |
+| `/story-review-llm "file.md"` | 3a only | Review via cheap LLM |
+| `/story-improvement-loop "file.md"` | 3b only | Multi-round polishing |
 | `/story-illustrate "file.md"` | 4 only | Generate illustration prompts |
 | `/story-export` | 4 only | EPUB + KDP export |
+| `/story-notify "msg"` | Notify | Send LINE push notification |
+| `/story-analytics` | Analytics | Production dashboard |
 
 ## Key Constants (override inline)
 
@@ -60,6 +71,7 @@ graph LR
 - AUTO_PROCEED = true
 - REVIEWER_MODEL = "gpt-4o"
 - HUMAN_CHECKPOINT = false
+- NOTIFICATION_LEVEL = "all" (levels: all / milestones / final)
 
 ## Version Tracking
 
@@ -77,29 +89,43 @@ stories/{slug}_v3_final.md       ← Approved for export
 - Frontmatter must include `version: N` and `previous_version: "filename"`
 - The pipeline always operates on the latest version
 
-## State Persistence
+## State Persistence & Recovery
 
-The pipeline saves `PIPELINE_STATE.json` after each stage for crash recovery:
+The pipeline saves state files for crash recovery (critical for overnight runs):
 
-```json
-{
-  "pipeline_id": "batch-20260319",
-  "current_stage": 4,
-  "current_story_index": 3,
-  "total_stories": 10,
-  "status": "in_progress",
-  "started_at": "2026-03-19T22:00:00",
-  "last_updated": "2026-03-19T23:15:00",
-  "stage_results": {
-    "1_research": "complete",
-    "2_concepts": "complete",
-    "3_originality": "complete",
-    "4_writing": "in_progress"
-  }
-}
-```
+| File | Purpose | Written By |
+|------|---------|-----------|
+| `PIPELINE_STATE.json` | Current stage + story progress | story-pipeline |
+| `REVIEW_STATE.json` | Current review round + score | story-review |
+| `IMPROVEMENT_STATE.json` | Current improvement round | story-improvement-loop |
+| `PIPELINE_ERRORS.md` | Skipped stories + error log | story-pipeline |
 
-On startup: if `PIPELINE_STATE.json` exists with `"status": "in_progress"` AND timestamp < 24h, resume from saved stage.
+**On startup:** if `PIPELINE_STATE.json` exists with `"status": "in_progress"` AND timestamp < 24h:
+1. Resume from saved stage
+2. Skip stories that already have output files (idempotent)
+3. Continue from first incomplete story
+
+**Error handling:**
+- Transient errors → retry 3x with backoff
+- Story-specific errors → skip and continue
+- Fatal errors → save state, send notification, halt
+
+## Human Checkpoints
+
+When `HUMAN_CHECKPOINT = true`, review skills pause for user input:
+
+| Response | Action |
+|----------|--------|
+| `go` | Implement all suggested fixes |
+| `skip N` | Skip fix #N, implement rest |
+| `stop` | Save state, halt (resume later) |
+| `custom: ...` | Use custom instructions instead |
+
+When `HUMAN_CHECKPOINT = false` (default): auto-proceed with all fixes.
+
+## Notifications
+
+`/story-notify` sends LINE Notify push notifications at each stage. Requires `LINE_NOTIFY_TOKEN` env var. Fallback: logs to `NOTIFICATION_LOG.md`.
 
 ## Safety Rules
 
@@ -112,13 +138,36 @@ On startup: if `PIPELINE_STATE.json` exists with `"status": "in_progress"` AND t
 ## File Structure
 
 ```
-skills/          → SKILL.md files (the brain)
-stories/         → Generated story markdown files (versioned: _v0_, _v1_, _v2_)
-illustrations/   → Midjourney prompts per story
-output/          → Final exports (EPUB, PDF)
-output/approved/ → Stories that passed review
-mcp-servers/     → MCP server implementations
-docs/            → Setup guides and documentation
+bedtime-story-factory/
+├── CLAUDE.md              ← You are here (agent instructions)
+├── skills/                ← 13 SKILL.md files (the brain)
+│   ├── story-research/        Workflow 1: market research
+│   ├── story-concept/         Workflow 1: concept generation
+│   ├── originality-check/     Workflow 1: deduplication
+│   ├── story-bridge/          Workflow 1.5: concept validation
+│   ├── story-writing/         Workflow 2: full story generation
+│   ├── story-review/          Workflow 3a: autonomous review
+│   ├── story-review-llm/      Workflow 3a: cheap LLM review
+│   ├── story-improvement-loop/ Workflow 3b: prose polishing
+│   ├── story-illustrate/      Workflow 4: illustration prompts
+│   ├── story-export/          Workflow 4: EPUB + KDP
+│   ├── story-notify/          LINE push notifications
+│   ├── story-analytics/       Production dashboard
+│   └── story-pipeline/        Full overnight orchestrator
+├── mcp-servers/           ← MCP server implementations
+│   ├── llm-chat/              Cross-model review
+│   └── line-notify/           LINE Notify API
+├── styles/                ← EPUB stylesheets
+│   └── children-book.css      Children's book layout
+├── stories/               ← Generated stories (versioned)
+├── illustrations/         ← Midjourney prompts per story
+├── output/                ← Final exports
+│   └── approved/              Stories that passed review
+└── docs/                  ← Guides
+    ├── SETUP.md               Getting started
+    ├── LLM_PROVIDERS.md       Model comparison + costs
+    ├── WORKFLOW_DIAGRAM.md    Visual pipeline diagrams
+    └── NARRATIVE_REPORT_EXAMPLE.md  Sample full run
 ```
 
 ## Score Progression Tracking
@@ -136,3 +185,15 @@ Each story's review history is tracked in `SCORE_TRACKER.md`:
 ```
 
 This enables overnight batch analysis: which stories improved most, which criteria are consistently weak, and where to focus future writing prompts.
+
+## Production At a Glance
+
+```
+Skills:     13 (12 story skills + 1 analytics)
+MCP servers: 2 (llm-chat + line-notify)
+Docs:        4 guides
+Styles:      1 EPUB stylesheet
+Pipeline:    8 stages, overnight-ready
+Recovery:    state files + idempotent stage checks
+Monitoring:  LINE Notify + NOTIFICATION_LOG.md
+```

@@ -19,8 +19,40 @@ End-to-end story production for: **$ARGUMENTS**
 - OUTPUT_FORMAT = "markdown, epub"
 - REVIEWER_MODEL = "gpt-4o"
 - HUMAN_CHECKPOINT = false
+- NOTIFICATION_LEVEL = "all"
 
 > Override: `/story-pipeline "5 space stories" — target_age: 6-9, word_count: 1200`
+
+## Batch Scheduling
+
+Plan multiple overnight runs ahead of time:
+
+```
+/story-pipeline "theme" — schedule: nightly, nights: 5
+```
+
+This generates `BATCH_SCHEDULE.md`:
+
+```markdown
+# 📅 Batch Schedule
+
+| Night | Date | Theme | Stories | Status |
+|-------|------|-------|---------|--------|
+| 1 | 2026-03-20 | magical forest animals | 10 | ⬜ Pending |
+| 2 | 2026-03-21 | ocean adventures | 10 | ⬜ Pending |
+| 3 | 2026-03-22 | space bedtime journeys | 10 | ⬜ Pending |
+| 4 | 2026-03-23 | dinosaur friendship | 10 | ⬜ Pending |
+| 5 | 2026-03-24 | garden fairy tales | 10 | ⬜ Pending |
+```
+
+**Theme generation:** If only one theme is given, the pipeline auto-generates related themes for subsequent nights using the research skill's niche data.
+
+**On each night run:**
+1. Read `BATCH_SCHEDULE.md`
+2. Find first ⬜ Pending night
+3. Run pipeline for that theme
+4. Update status to ✅ Complete with score summary
+5. User runs `/story-pipeline` each night (or sets up cron for Claude Code)
 
 ## Pipeline
 
