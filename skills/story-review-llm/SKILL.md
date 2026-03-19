@@ -112,9 +112,54 @@ Append to `STORY_REVIEW.md` with scores, fixes, raw response.
 
 Update `REVIEW_STATE.json` with current state.
 
+### Phase E: Score Progression Tracking
+
+**After every round**, append to `SCORE_TRACKER.md`:
+
+```markdown
+## Score Progression: "[Story Title]" (LLM: {model_name})
+
+| Round | Time | Age | Arc | Read | Engage | Moral | Illust | Parent | Bedtime | Overall | Δ |
+|-------|------|-----|-----|------|--------|-------|--------|--------|---------|---------|---|
+| R0 draft | HH:MM | X | X | X | X | X | X | X | X | X.X | — |
+| R1 review | HH:MM | X | X | X | X | X | X | X | X | X.X | +X.X |
+```
+
+Include the model name so we can compare quality across providers.
+
+### Phase F: Version Output
+
+**CRITICAL:** Do NOT overwrite the input file. Create a NEW versioned file:
+
+- Input: `stories/{slug}_v0_draft.md`
+- Output: `stories/{slug}_v1_reviewed.md`
+
+Frontmatter of v1 must include:
+```yaml
+version: 1
+version_label: "reviewed"
+previous_version: "stories/{slug}_v0_draft.md"
+review_score: X.X
+review_rounds: N
+reviewer_model: "deepseek-chat"
+```
+
 ### Termination
 
-Set `REVIEW_STATE.json` status to `"completed"`. Move approved stories to `output/approved/`.
+1. Update `REVIEW_STATE.json`:
+```json
+{
+  "round": 2,
+  "story_file": "stories/{slug}_v0_draft.md",
+  "output_file": "stories/{slug}_v1_reviewed.md",
+  "status": "completed",
+  "final_score": 8.5,
+  "score_progression": [5.8, 7.4, 8.5],
+  "reviewer_model": "deepseek-chat",
+  "timestamp": "2026-03-19T23:00:00"
+}
+```
+2. Move approved stories to `output/approved/`
 
 ## Key Rules
 
@@ -123,3 +168,6 @@ Set `REVIEW_STATE.json` status to `"completed"`. Move approved stories to `outpu
 - Include previous context in round 2+ prompts
 - Document everything in STORY_REVIEW.md
 - Be honest — don't game scores
+- **Never overwrite input**: Always create `_v1_reviewed.md` from `_v0_draft.md`
+- **Track every score**: `SCORE_TRACKER.md` must be updated after EVERY round
+- **Include model name**: Score tracker must record which LLM provider was used

@@ -84,7 +84,12 @@ Append to `STORY_REVIEW.md`:
 |-----------|-------|
 | Age-appropriateness | X/10 |
 | Emotional arc | X/10 |
-| ... | ... |
+| Readability | X/10 |
+| Engagement | X/10 |
+| Moral clarity | X/10 |
+| Illustration potential | X/10 |
+| Parent appeal | X/10 |
+| Bedtime suitability | X/10 |
 | **Overall** | **X/10** |
 
 ### Fixes Applied
@@ -93,13 +98,59 @@ Append to `STORY_REVIEW.md`:
 ### Status: continuing / approved
 ```
 
+### Phase E: Score Progression Tracking
+
+**After every round**, append to `SCORE_TRACKER.md`:
+
+```markdown
+## Score Progression: "[Story Title]"
+
+| Round | Time | Age | Arc | Read | Engage | Moral | Illust | Parent | Bedtime | Overall | Δ |
+|-------|------|-----|-----|------|--------|-------|--------|--------|---------|---------|---|
+| R0 draft | HH:MM | X | X | X | X | X | X | X | X | X.X | — |
+| R1 review | HH:MM | X | X | X | X | X | X | X | X | X.X | +X.X |
+```
+
+This enables batch analysis: which criteria improve most, what's consistently weak, and where to focus prompts.
+
+### Phase F: Version Output
+
+**CRITICAL:** Do NOT overwrite the input file. Create a NEW versioned file:
+
+- Input: `stories/{slug}_v0_draft.md`
+- Output: `stories/{slug}_v1_reviewed.md`
+
+Frontmatter of v1 must include:
+```yaml
+version: 1
+version_label: "reviewed"
+previous_version: "stories/{slug}_v0_draft.md"
+review_score: X.X
+review_rounds: N
+```
+
 ### Termination
 
-1. Update `REVIEW_STATE.json` with `"status": "completed"`
+1. Update `REVIEW_STATE.json`:
+```json
+{
+  "round": 2,
+  "story_file": "stories/brave-dragon_v0_draft.md",
+  "output_file": "stories/brave-dragon_v1_reviewed.md",
+  "status": "completed",
+  "final_score": 8.5,
+  "score_progression": [5.8, 7.4, 8.5],
+  "timestamp": "2026-03-19T23:00:00"
+}
+```
 2. Write final verdict to `STORY_REVIEW.md`
-3. If approved: move story to `output/approved/`
+3. If approved: copy to `output/approved/`
 4. If max rounds without approval: list remaining issues
+5. Update `SCORE_TRACKER.md` with final entry
 
 ## Key Rules
 
 - **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user — just do it silently.
+- **Never overwrite input**: Always create `_v1_reviewed.md` from `_v0_draft.md`
+- **Track every score**: `SCORE_TRACKER.md` must be updated after EVERY round
+- **State persistence**: `REVIEW_STATE.json` survives context window resets

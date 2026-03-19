@@ -92,12 +92,17 @@ Run automated checks on the draft:
 4. Add subtle rhyme or rhythm where natural
 5. Verify character consistency
 
-### Output: stories/[title-slug].md
+### Output: stories/[title-slug]_v0_draft.md
+
+**CRITICAL: Always use versioned filename.** The `_v0_draft` suffix is mandatory. Never write to a bare filename.
 
 ```markdown
 ---
 title: "[Title]"
 author: "AI Story Factory"
+version: 0
+version_label: "draft"
+previous_version: null
 target_age: "3-6"
 word_count: [actual count]
 readability_score: [Flesch-Kincaid grade]
@@ -126,6 +131,26 @@ date: [today]
 The End. 🌙
 ```
 
+### Post-Write Checklist
+
+After writing the story file:
+1. Verify the file was saved as `stories/{slug}_v0_draft.md`
+2. Verify frontmatter contains `version: 0` and `version_label: "draft"`
+3. Log to `SCORE_TRACKER.md` with initial self-assessed scores (pre-review)
+
+## Version Convention
+
+```
+_v0_draft.md       ← You produce this (first draft)
+_v1_reviewed.md    ← /story-review produces this
+_v2_improved.md    ← /story-improvement-loop produces this
+_v3_final.md       ← Approved for export
+```
+
+**NEVER overwrite a previous version file.** Always create the next version.
+
 ## Key Rules
 
 - **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user — just do it silently.
+- **Always version**: Output MUST be `_v0_draft.md`. No exceptions.
+- **Frontmatter required**: Every story MUST include version metadata.

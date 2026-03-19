@@ -146,6 +146,60 @@ Output: EPUB files + KDP metadata for each story.
 | 01:30-01:35 | Exporting | Yes ✅ |
 | 06:00 | You wake up → 10 stories ready | ☕ |
 
+## State Persistence (Crash Recovery)
+
+On each stage completion, save `PIPELINE_STATE.json`:
+
+```json
+{
+  "pipeline_id": "batch-20260319-2200",
+  "batch_description": "$ARGUMENTS",
+  "current_stage": 4,
+  "current_story_index": 3,
+  "total_stories": 10,
+  "status": "in_progress",
+  "started_at": "2026-03-19T22:00:00",
+  "last_updated": "2026-03-19T23:15:00",
+  "stage_results": {
+    "1_research": { "status": "complete", "output": "RESEARCH_REPORT.md" },
+    "2_concepts": { "status": "complete", "output": "CONCEPT_REPORT.md", "count": 12 },
+    "3_originality": { "status": "complete", "passed": 10, "rejected": 2 },
+    "4_writing": { "status": "in_progress", "completed": 3, "pending": 7 },
+    "5_review": { "status": "pending" },
+    "6_illustrate": { "status": "pending" },
+    "7_export": { "status": "pending" }
+  },
+  "stories": [
+    { "slug": "brave-dragon", "status": "v0_draft", "review_score": null },
+    { "slug": "sleepy-owl", "status": "v1_reviewed", "review_score": 8.2 }
+  ]
+}
+```
+
+**On startup:**
+1. Check if `PIPELINE_STATE.json` exists
+2. If `status == "in_progress"` AND `last_updated` < 24h → RESUME from saved stage
+3. If `status == "completed"` or file absent → start fresh
+4. On resume: skip completed stages, continue from `current_stage` + `current_story_index`
+
+**After each stage:** overwrite state file. On completion: set `"status": "completed"`.
+
+## Version Tracking
+
+Stories flow through pipeline with versioned filenames:
+
+```
+/story-writing     → stories/{slug}_v0_draft.md
+/story-review      → stories/{slug}_v1_reviewed.md  (reads v0, outputs v1)
+/story-improve     → stories/{slug}_v2_improved.md   (reads v1, outputs v2)
+/story-export      → reads latest version for export
+```
+
+The pipeline always operates on the **latest version** of each story file.
+
 ## Key Rules
 
 - **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user — just do it silently.
+- **State persistence**: ALWAYS save `PIPELINE_STATE.json` after each stage completes
+- **Resume-safe**: On crash/context-reset, check state file and continue — do NOT restart
+- **Version tracking**: NEVER overwrite story files — always create next `_vN_` version
