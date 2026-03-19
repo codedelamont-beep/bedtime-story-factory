@@ -1,103 +1,212 @@
 ---
 name: story-illustrate
-description: "Generate Midjourney/AI image prompts for each scene in a story. Creates consistent character descriptions, scene compositions, and style guides. Use when user says 'illustrate', 'generate prompts', 'image prompts'."
+description: "Generate actual illustrations for each spread using anchor images for character consistency. Produces print-ready images (300dpi, correct aspect ratio) with style-locked prompts. Requires character bible from /story-character-bible. Use when user says 'illustrate', 'generate images', 'create illustrations'."
 argument-hint: [story-file-path]
 ---
 
-# Story Illustration — AI Image Prompt Generator
+# Story Illustration — Full Image Generation Pipeline
 
-Generate illustration prompts for: **$ARGUMENTS**
+Generate illustrations for: **$ARGUMENTS**
+
+> **PREREQUISITE:** Run `/story-character-bible` first. This skill requires anchor images and style-lock prompts from `characters/[slug]/`.
 
 ## Constants
 
 - STYLE = "watercolor children's book illustration"
-- ASPECT_RATIO = "1:1"
-- SCENES_PER_STORY = 8
-- PROMPT_FORMAT = "midjourney" (or "flow", "dalle")
+- SPREADS = 14 (matching story structure)
+- COVER = true
+- ASPECT_RATIO_INTERIOR = "1:1" (square for 8.5x8.5)
+- ASPECT_RATIO_COVER = "2:3" (tall for front cover)
+- DPI = 300 (print-ready)
+- MIN_RESOLUTION = "2048x2048" (interior), "2048x3072" (cover)
+- IMAGE_TOOL = "dall-e-3" (or "midjourney", "neolemon", "flux")
 
 ## Workflow
 
-### Phase 1: Character Design Sheet
+### Phase 1: Load Character Bible
 
-Create a consistent character description for Midjourney:
+Read from `characters/[slug]/`:
+1. Load all `style-lock.txt` files — these go in EVERY prompt
+2. Load `world/settings.md` — color palette per spread
+3. Load `interactions/` — multi-character scale reference
 
+### Phase 2: Spread-by-Spread Generation
+
+For each `<!-- SPREAD N -->` marker in the story:
+
+#### Step 1: Scene Analysis
 ```markdown
-## Character Sheet: [Character Name]
-
-- Species/Type: [e.g., small red dragon]
-- Key features: [e.g., round eyes, tiny wings, green belly]
-- Expression style: [e.g., wide-eyed, friendly, soft]
-- Color palette: [e.g., warm reds, soft greens]
-- Size reference: [e.g., about the size of a cat]
-- Clothing/accessories: [e.g., striped scarf]
-
-### Reference prompt:
-"[character description], watercolor children's book illustration style,
-soft edges, warm colors, white background, character sheet" --ar 1:1
+- Spread: [N]
+- Story text: "[excerpt]"
+- Characters present: [list]
+- Action: [what's happening]
+- Setting: [where]
+- Time/Lighting: [from mood progression]
+- Emotion: [what the illustration should convey]
+- Composition: [foreground/mid/background elements]
 ```
 
-### Phase 2: Scene Prompts
+#### Step 2: Prompt Construction
 
-For each `<!-- SCENE -->` marker in the story:
-
-1. Read the scene description and surrounding text
-2. Identify: setting, characters present, action, mood, time of day
-3. Generate a Midjourney-optimized prompt
-
-**Prompt formula:**
+**Formula (every prompt follows this exactly):**
 ```
-[scene description], [character] from "[story title]",
-[art style], [mood lighting], [color palette],
-children's book illustration, soft watercolor,
-no text, no typography --ar [ratio] --style raw --quality 2
+[Scene description], [Character Style Lock Fragment(s)],
+[setting from world design], [mood lighting from progression],
+[color palette hex values from bible], children's picture book,
+watercolor illustration, soft rounded edges, warm palette,
+no text, no typography, no words, no letters,
+--ar [ratio] --quality 2
 ```
 
 **Rules:**
-- Maintain character consistency across all scenes
-- Reference the character sheet description in every prompt
-- Progressive mood shift: scenes get warmer/softer toward the end
-- Final scene should be the sleepiest/coziest
-- No scary/dark imagery even if the story has mild tension
+- Include the FULL Style Lock Fragment for every character in the scene
+- Never abbreviate character description ("the fox" → use full description)
+- Include exact color hex values for consistency
+- Always include "no text, no typography" (AI loves adding random text)
+- Reference the mood progression (spreads 1-4: cool, 5-8: warming, 9-14: warm/golden)
 
-### Phase 3: Style Guide
+#### Step 3: Generation & QC
 
-Generate a style guide for visual consistency:
+For each image generated:
 
 ```markdown
-## Style Guide: "[Story Title]"
+## QC Checklist — Spread [N]
 
-- Art style: Soft watercolor, rounded shapes
-- Color palette: [5 hex colors]
-- Line weight: Soft, no hard outlines
-- Background style: Simple, not busy
-- Mood progression: Bright → Warm → Golden → Moonlit
-- Typography style: [for cover/title]
+- [ ] Character face matches anchor image
+- [ ] Character outfit/colors correct
+- [ ] Character proportions correct (head size, limb length)
+- [ ] No extra fingers or malformed hands
+- [ ] No text or typography in image
+- [ ] Color palette matches world design
+- [ ] Mood/lighting matches progression for this spread
+- [ ] Scene matches story text
+- [ ] Style consistent with previous spreads
+- [ ] Resolution ≥ 2048px on shortest side
 ```
 
-### Phase 4: Cover Prompt
+**If QC fails:**
+1. Regenerate with adjusted prompt (add "NOT [problem]")
+2. Maximum 3 regeneration attempts per spread
+3. Log failures in `ILLUSTRATION_QC.md`
 
-Generate the book cover prompt:
+### Phase 3: Style Consistency Check
+
+After all spreads are generated, compare them side-by-side:
+
+```markdown
+## Style Consistency Audit
+
+| Check | Status |
+|-------|--------|
+| Character proportions consistent across all spreads | ✅/❌ |
+| Color palette consistent (no random blue shifts) | ✅/❌ |
+| Art style consistent (watercolor throughout, no photorealism) | ✅/❌ |
+| Lighting follows mood progression (cool→warm→golden) | ✅/❌ |
+| No anachronisms (modern objects in fantasy setting) | ✅/❌ |
+| Character aging/regression (should be same age throughout) | ✅/❌ |
 ```
-"[Title]" children's book cover, [main character] in [key scene],
+
+Regenerate any spreads that fail consistency check.
+
+### Phase 4: Cover Generation
+
+```
+"[Title]" children's picture book cover,
+[Main character Style Lock Fragment] in [key iconic scene],
 [art style], warm inviting colors, bedtime theme,
-no text, professional book cover composition --ar 2:3 --quality 2
+professional book cover composition, centered character,
+[color palette from bible], no text, no typography,
+--ar 2:3 --quality 2
+```
+
+Generate 3 cover variants. Select the one with best character likeness.
+
+### Phase 5: Post-Processing Requirements
+
+For each final image, document required post-processing:
+
+```markdown
+## Post-Processing: Spread [N]
+
+- [ ] Upscale to 300dpi at 8.5" × 8.5" (2550 × 2550px minimum)
+- [ ] Color profile: sRGB (for digital) / CMYK (for print)
+- [ ] Add 0.125" bleed on all sides (for KDP print)
+- [ ] No compression artifacts visible at 100% zoom
+- [ ] File format: PNG (lossless) or TIFF
+```
+
+### Phase 6: Character Sheet Reference for Series
+
+Save a master reference for reuse in future stories:
+
+```markdown
+## Series Reference: [Character Name]
+
+### Prompt That Produced Best Results
+"[exact prompt that generated the best anchor image]"
+
+### Model & Settings Used
+- Model: [dall-e-3 / midjourney v6 / etc.]
+- Settings: [quality, style, seed if applicable]
+
+### Notes for Future Books
+- [what worked, what to avoid]
 ```
 
 ### Output: illustrations/[title-slug]/
 
 ```
 illustrations/[title-slug]/
-├── character-sheet.md
-├── style-guide.md
-├── prompts/
-│   ├── scene-01.txt
-│   ├── scene-02.txt  
+├── CHARACTER_BIBLE_REF.md      ← Link to characters/[slug]/
+├── spreads/
+│   ├── spread-01.png           ← Actual generated images
+│   ├── spread-02.png
 │   ├── ...
-│   ├── scene-08.txt
+│   ├── spread-14.png
+│   └── cover-front.png
+├── prompts/
+│   ├── spread-01.txt           ← Exact prompts used
+│   ├── spread-02.txt
+│   ├── ...
 │   └── cover.txt
-└── ILLUSTRATION_REPORT.md
+├── qc/
+│   └── ILLUSTRATION_QC.md      ← QC results per spread
+├── style-guide.md              ← Visual style reference
+└── ILLUSTRATION_REPORT.md      ← Summary of all images
+```
+
+### ILLUSTRATION_REPORT.md Format
+
+```markdown
+# Illustration Report: "[Title]"
+
+**Date**: [today]
+**Tool**: [dall-e-3 / midjourney / etc.]
+**Total spreads**: 14 + 1 cover
+**Regenerations needed**: [N]
+**Style consistency score**: [X/10]
+
+| Spread | Description | QC Pass | Regens | Final Prompt |
+|--------|-------------|---------|--------|--------------|
+| 1 | Fox in moonlit clearing | ✅ | 0 | [truncated] |
+| 2 | Fox looking around, ears up | ✅ | 1 | [truncated] |
+| ... | ... | ... | ... | ... |
+| Cover | Fox and Owl under stars | ✅ | 2 | [truncated] |
+
+## Issues Found
+- Spread 4: had to regenerate due to hand malformation
+- Spread 9: color shifted too blue, re-prompted with hex codes
+
+## Series Reuse
+Character anchors saved to `characters/[slug]/` for future books.
 ```
 
 ## Key Rules
 
-- **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user — just do it silently.
+- **Character bible is prerequisite** — never generate without anchor images
+- **Style Lock in every prompt** — the full character description, every time
+- **No text in images** — always include "no text, no typography" in prompt
+- **QC every image** — check face, proportions, hands, colors before accepting
+- **300dpi minimum** — anything less is not print-ready
+- **Save prompts** — exact prompt stored next to each image for reproducibility
+- **Large file handling**: If Write fails, use Bash fallback

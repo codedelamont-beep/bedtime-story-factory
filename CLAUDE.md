@@ -13,14 +13,18 @@ Skills compose into **numbered workflows** that chain into a full production pip
 ```
 Workflow 1: Discovery            /story-research → /story-concept → /originality-check
 Workflow 1.5: Bridge             /story-bridge (validates concepts before writing)
-Workflow 2: Production           /story-writing (batch, one per concept)
-Workflow 3a: Review              /story-review OR /story-review-llm
+Workflow 2: Production           /story-writing (references CRAFT_GUIDE.md)
+Workflow 3a: Review              /story-review (craft-focused criteria) OR /story-review-llm
 Workflow 3b: Polish              /story-improvement-loop
-Workflow 4: Output               /story-illustrate → /story-export
-Workflow N: Notify               /story-notify (called throughout by other skills)
-Workflow A: Analytics            /story-analytics (run anytime for dashboard)
+Workflow 4a: Character           /story-character-bible (anchor images + style lock)
+Workflow 4b: Illustration        /story-illustrate (actual image generation with QC)
+Workflow 4c: Layout              /story-layout (fixed-layout EPUB + print-ready PDF)
+Workflow 4d: Export              /story-export (KDP-compliant, AI disclosure, pricing)
+Workflow S: Series               /story-series (multi-book production)
+Workflow N: Notify               /story-notify (called throughout)
+Workflow A: Analytics            /story-analytics (production dashboard)
 
-Full Pipeline: /story-pipeline   chains Workflow 1 → 1.5 → 2 → 3a → 3b → 4
+Full Pipeline: /story-pipeline   chains 1 → 1.5 → 2 → 3a → 3b → 4a → 4b → 4c → 4d
 ```
 
 ```mermaid
@@ -30,20 +34,20 @@ graph LR
     C --> D["/story-bridge"]
     D -->|GO| E["/story-writing"]
     D -->|SKIP| C
-    E --> F["/story-review"]
+    E -->|"craft guide"| F["/story-review"]
     F --> G["/story-improvement-loop"]
-    G --> H["/story-illustrate"]
-    H --> I["/story-export"]
-    
-    N["/story-notify"] -.->|"📱 called by"| D
-    N -.->|"📱 called by"| F
-    N -.->|"📱 called by"| G
-    N -.->|"📱 called by"| I
+    G --> CB["/story-character-bible"]
+    CB --> H["/story-illustrate"]
+    H --> L["/story-layout"]
+    L --> I["/story-export"]
     
     style D fill:#f9a825,stroke:#333
+    style E fill:#e65100,stroke:#333,color:#fff
     style F fill:#42a5f5,stroke:#333
     style G fill:#42a5f5,stroke:#333
-    style N fill:#66bb6a,stroke:#333
+    style CB fill:#ab47bc,stroke:#333,color:#fff
+    style H fill:#ab47bc,stroke:#333,color:#fff
+    style L fill:#ab47bc,stroke:#333,color:#fff
 ```
 
 ## Quick Commands

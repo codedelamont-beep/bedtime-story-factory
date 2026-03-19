@@ -48,26 +48,51 @@ Persist state to `REVIEW_STATE.json` after each round for crash recovery:
 
 ### Phase A: Send to Reviewer
 
+> **Reference `references/CRAFT_GUIDE.md` for evaluation standards.**
+
 ```
 Prompt to REVIEWER_MODEL:
-  You are a children's book editor specializing in bedtime stories.
-  Review this story for ages [TARGET_AGE].
+  You are a senior children's book editor at a major publishing house.
+  You've edited 200+ bestselling picture books. You know what separates
+  forgettable AI-generated text from books children beg to hear again.
+
+  Review this bedtime story for ages [TARGET_AGE].
 
   [Full story text]
 
-  Score 1-10 on each criterion:
-  1. Age-appropriateness (vocabulary, concepts, themes)
-  2. Emotional arc (does it wind down to sleepy?)
-  3. Readability (sentence length, word complexity)
-  4. Engagement (would a child ask for this again?)
-  5. Moral clarity (lesson present but not preachy?)
-  6. Illustration potential (clear visual scenes?)
-  7. Parent appeal (would a parent enjoy reading aloud?)
-  8. Bedtime suitability (calming, not stimulating?)
+  ## SAFETY GATE (Pass/Fail — story is rejected if any fail):
+  - [ ] No violence, death, injury, or scary content
+  - [ ] Vocabulary appropriate for target age
+  - [ ] Ending is peaceful and calming
+  - [ ] No abandonment or anxiety themes
 
-  Overall score: X/10
-  Verdict: READY / ALMOST / NEEDS WORK
+  ## CRAFT SCORING (1-10 each):
+  1. Read-aloud rhythm — Can you read every sentence without stumbling?
+     Do the stressed syllables create a musical pattern?
+  2. Sound design — Are there enough onomatopoeia, alliteration, and
+     mouth-feel words? Are the words "delicious" to say?
+  3. Refrain strength — Is there a repeating phrase? Does it gain
+     emotional power each time it appears?
+  4. Show-don't-tell — Are emotions shown through physical sensation
+     and observable behavior, never stated directly?
+  5. Page-turn anticipation — Does each spread end with a hook
+     that makes you want to turn the page?
+  6. Character distinctiveness — Could a 4-year-old describe this
+     character in 5 words after one reading?
+  7. Re-read gravity — Would a child say "again!"? Is it bearable
+     for a parent on reading #50?
+  8. Visual filmability — Can an illustrator see exactly what to draw
+     for each spread? Are the scenes specific, not vague?
+  9. Wind-down quality — Do the final 3 spreads descend in energy?
+     Does the last sentence pass the "whisper test"?
+  10. Golden line — Is there one line good enough to whisper as the
+      child falls asleep? Quote it.
+
+  Overall craft score: X/10
+  Verdict: PUBLISH / ALMOST / NEEDS CRAFT WORK
+  
   Specific fixes needed (ranked by impact):
+  For each fix, quote the current text and provide the improved version.
 ```
 
 ### Phase B: Parse & Decide
@@ -140,21 +165,25 @@ Append to `STORY_REVIEW.md`:
 ```markdown
 ## Round N — "[Story Title]"
 
-### Scores
+### Safety Gate: PASS / FAIL
+
+### Craft Scores
 | Criterion | Score |
 |-----------|-------|
-| Age-appropriateness | X/10 |
-| Emotional arc | X/10 |
-| Readability | X/10 |
-| Engagement | X/10 |
-| Moral clarity | X/10 |
-| Illustration potential | X/10 |
-| Parent appeal | X/10 |
-| Bedtime suitability | X/10 |
+| Read-aloud rhythm | X/10 |
+| Sound design | X/10 |
+| Refrain strength | X/10 |
+| Show-don't-tell | X/10 |
+| Page-turn anticipation | X/10 |
+| Character distinctiveness | X/10 |
+| Re-read gravity | X/10 |
+| Visual filmability | X/10 |
+| Wind-down quality | X/10 |
+| Golden line | X/10 |
 | **Overall** | **X/10** |
 
 ### Fixes Applied
-- [list of changes]
+- [quote original text] → [replacement text]
 
 ### Status: continuing / approved
 ```
@@ -166,10 +195,10 @@ Append to `STORY_REVIEW.md`:
 ```markdown
 ## Score Progression: "[Story Title]"
 
-| Round | Time | Age | Arc | Read | Engage | Moral | Illust | Parent | Bedtime | Overall | Δ |
-|-------|------|-----|-----|------|--------|-------|--------|--------|---------|---------|---|
-| R0 draft | HH:MM | X | X | X | X | X | X | X | X | X.X | — |
-| R1 review | HH:MM | X | X | X | X | X | X | X | X | X.X | +X.X |
+| Round | Time | Rhythm | Sound | Refrain | Show | PageTurn | Char | Reread | Visual | Wind | Gold | Overall | Δ |
+|-------|------|--------|-------|---------|------|----------|------|--------|--------|------|------|---------|---|
+| R0 draft | HH:MM | X | X | X | X | X | X | X | X | X | X | X.X | — |
+| R1 review | HH:MM | X | X | X | X | X | X | X | X | X | X | X.X | +X.X |
 ```
 
 This enables batch analysis: which criteria improve most, what's consistently weak, and where to focus prompts.
