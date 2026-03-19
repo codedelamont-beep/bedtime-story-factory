@@ -222,9 +222,103 @@ Stories flow through pipeline with versioned filenames:
 
 The pipeline always operates on the **latest version** of each story file.
 
+## Error Recovery (Context Window Reset)
+
+**CRITICAL for overnight runs.** Claude Code context windows can reset during long batches. This section ensures graceful recovery.
+
+### On New Context Window
+
+When the pipeline agent starts in a new context window (e.g. after crash or reset):
+
+```
+1. Read PIPELINE_STATE.json
+2. If status == "in_progress":
+   a. Print: "🔄 Resuming pipeline from Stage [N], Story [M]/[total]"
+   b. Check which output files already exist:
+      - stories/*_v0_draft.md → writing stage outputs
+      - stories/*_v1_reviewed.md → review stage outputs  
+      - stories/*_v2_improved.md → improvement stage outputs
+   c. Skip stories that already have output files for current stage
+   d. Resume from first incomplete story in current stage
+3. If status == "completed":
+   a. Print: "✅ Pipeline already completed. Run with new topic to start fresh."
+4. If file missing:
+   a. Start fresh pipeline
+```
+
+### Partial Stage Recovery
+
+For batch stages (writing, review, improvement, illustration):
+
+```python
+# Pseudocode for resuming batch stages
+for story in state.stories:
+    expected_output = f"stories/{story.slug}_v{stage_version}_{label}.md"
+    if file_exists(expected_output):
+        print(f"  ⏭ Skipping {story.slug} — already has {label}")
+        continue
+    else:
+        print(f"  ▶ Processing {story.slug}")
+        execute_stage(story)
+        update_state(story)
+```
+
+### Error During Execution
+
+If any stage/story fails:
+
+```
+1. Save current state to PIPELINE_STATE.json immediately
+2. Send error notification: /story-notify "⚠️ Error at Stage [N], Story [title]"
+3. Decision based on error type:
+   a. Transient (API timeout, rate limit):
+      - Wait 30 seconds
+      - Retry up to 3 times
+      - If still failing: skip this story, continue with next
+   b. Story-specific (bad content, unparseable review):
+      - Log error to PIPELINE_ERRORS.md
+      - Skip this story, continue with next
+   c. Fatal (disk full, permission error):
+      - Save state
+      - Send notification
+      - HALT pipeline
+4. At the end: report skipped stories in final report
+```
+
+### Recovery Files
+
+| File | Purpose | Written By |
+|------|---------|-----------|
+| `PIPELINE_STATE.json` | Current stage/story progress | story-pipeline |
+| `REVIEW_STATE.json` | Current review round/score | story-review |
+| `IMPROVEMENT_STATE.json` | Current improvement round | story-improvement-loop |
+| `PIPELINE_ERRORS.md` | Log of skipped stories and errors | story-pipeline |
+
+## Notification Integration
+
+Call `/story-notify` at these points:
+
+```
+After Stage 1 (Research):        "📊 Research done: [N] niches found"
+After Stage 2 (Concepts):        "💡 Concepts: [N] generated"
+After Stage 3 (Originality):     "✅ Originality: [N] passed"
+After Stage 3.5 (Bridge):        "🌉 Bridge: [N] GO, [N] SKIP"
+After each story (Write):        (only if NOTIFICATION_LEVEL = "all")
+After each review round:         "📝 [title]: [score]/10"
+After improvement loop:          "✨ [title]: [before]→[after]"
+After Stage 7 (Illustrate):      "🎨 [N] illustrations done"
+Pipeline complete:               "🌙 COMPLETE! [N] stories, avg [X]/10"
+On error:                        "⚠️ Error: [description]"
+```
+
 ## Key Rules
 
 - **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user — just do it silently.
 - **State persistence**: ALWAYS save `PIPELINE_STATE.json` after each stage completes
 - **Resume-safe**: On crash/context-reset, check state file and continue — do NOT restart
 - **Version tracking**: NEVER overwrite story files — always create next `_vN_` version
+- **Skip, don't stop**: If one story fails, skip it and continue. Report at the end.
+- **Notify on errors**: Always send notification on errors so user can check phone
+- **Check files before work**: Before processing a story, check if output already exists (idempotency)
+- **Log everything**: Errors go to `PIPELINE_ERRORS.md`, notifications to `NOTIFICATION_LOG.md`
+

@@ -16,19 +16,32 @@ Review and improve: **$ARGUMENTS**
 - REVIEWER_MODEL = "gpt-4o"
 - HUMAN_CHECKPOINT = false
 
-## State Persistence
+## State Persistence & Recovery
 
 Persist state to `REVIEW_STATE.json` after each round for crash recovery:
 
 ```json
 {
   "round": 2,
-  "story_file": "stories/brave-dragon.md",
+  "story_file": "stories/brave-dragon_v0_draft.md",
   "status": "in_progress",
   "last_score": 7.0,
   "last_verdict": "almost",
+  "conversation_history": [],
   "timestamp": "2026-03-19T22:00:00"
 }
+```
+
+**On context window reset / startup:**
+1. Check if `REVIEW_STATE.json` exists
+2. If `status == "in_progress"` AND `timestamp` < 24h:
+   - Print: "🔄 Resuming review of [story_file] from Round [N]"
+   - Read `STORY_REVIEW.md` for previous round details
+   - Continue from next round
+3. If `status == "paused_human"`:
+   - Print: "⏸ Review paused at Round [N]. Pending fixes: [list]"
+   - Present fixes and wait for response
+4. If `status == "completed"` or file absent: start fresh
 ```
 
 ## Review Loop
@@ -63,9 +76,57 @@ Prompt to REVIEWER_MODEL:
 - Score 6-7 AND verdict "ALMOST" → implement fixes, re-review
 - Score < 6 → significant rewrite needed
 
+### Phase B2: Human Checkpoint
+
+**Skip if `HUMAN_CHECKPOINT = false` (default).** When false, auto-proceed with all fixes.
+
+**When `HUMAN_CHECKPOINT = true`:**
+
+Present the review summary and wait for user response:
+
+```
+📋 Review Round [N]: "[Story Title]"
+
+Score: [X.X]/10 — [verdict]
+Weakest areas:
+1. [criterion]: [X]/10 — [suggested fix]
+2. [criterion]: [X]/10 — [suggested fix]
+3. [criterion]: [X]/10 — [suggested fix]
+
+Reply with one of:
+• "go"           → implement all fixes
+• "skip 2"       → skip fix #2, implement the rest
+• "skip 1,3"     → skip fixes #1 and #3
+• "stop"         → save state, halt review (resume later)
+• "custom: ..."  → use your instructions instead of fixes
+```
+
+**Response Parsing:**
+
+| Response | Action |
+|----------|--------|
+| `go` | Implement all suggested fixes, continue to next round |
+| `skip N` | Skip fix #N, implement all others |
+| `skip N,M` | Skip fixes #N and #M, implement all others |
+| `stop` | Save `REVIEW_STATE.json` with current state, halt. Resume with `/story-review "file.md"` |
+| `custom: [text]` | Ignore reviewer fixes. Use user's custom instructions as the fix spec |
+| (empty / timeout 60s) | If `AUTO_PROCEED = true`: treat as "go". Otherwise: wait. |
+
+**State on stop:**
+```json
+{
+  "status": "paused_human",
+  "round": 2,
+  "pending_fixes": ["fix1", "fix2", "fix3"],
+  "timestamp": "2026-03-19T23:00:00"
+}
+```
+
+On resume: detect `"status": "paused_human"`, present pending fixes again.
+
 ### Phase C: Implement Fixes
 
-For each fix (highest priority first):
+For each fix (highest priority first, respecting skip directives):
 1. Vocabulary swaps (replace hard words)
 2. Pacing adjustments (slow down ending)
 3. Emotional arc fixes (add warm moments)

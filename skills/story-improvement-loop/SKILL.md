@@ -47,7 +47,22 @@ Write `IMPROVEMENT_STATE.json` after each round:
 }
 ```
 
-**On startup:** if `IMPROVEMENT_STATE.json` exists with `"status": "in_progress"` AND timestamp < 24h, read it + `IMPROVEMENT_LOG.md` to recover context, then resume from next round. Otherwise start fresh.
+**On context window reset / startup:**
+1. Check if `IMPROVEMENT_STATE.json` exists
+2. If `status == "in_progress"` AND `timestamp` < 24h:
+   - Print: "🔄 Resuming improvement of [story_file] from Round [N]"
+   - Read `IMPROVEMENT_LOG.md` for previous round details
+   - Check if `stories/{slug}_v2_improving.md` exists (working copy)
+   - Resume from the next round
+3. If `status == "paused_human"`:
+   - Print: "⏸ Improvement paused at Round [N]. Pending fixes: [list]"
+   - Present fixes and wait for response
+4. If `status == "completed"` or file absent → start fresh
+
+**Notification integration:** After each round, call `/story-notify` with improvement score:
+```
+/story-notify "✨ Improved: [title] — Score: [before] → [after] (+[delta])"
+```
 
 ## Workflow
 
