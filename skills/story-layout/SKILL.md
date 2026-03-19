@@ -24,6 +24,29 @@ Create print-ready layout for: **$ARGUMENTS**
 - DPI = 300
 - COLOR_PROFILE = "sRGB" (KDP accepts sRGB for paperback interior)
 - PAGES = 32 (standard picture book)
+- FONT_BODY = "Andika" (default — designed for early literacy)
+- FONT_SIZE = 16pt (14pt minimum for print readability)
+- LINE_HEIGHT = 1.8
+
+## Typography Guide
+
+Children's book fonts must have: large x-height, clear letterforms, distinct 'a'/'o'/'e', and feel warm — NOT clinical.
+
+| Font | Style | Best For | Free? |
+|------|-------|----------|-------|
+| **Andika** ⭐ | Sans-serif, early literacy | Ages 2-5 (best legibility for new readers) | ✅ Google Fonts |
+| **Georgia** | Serif, elegant | Ages 4-6 (warm, traditional feel) | ✅ System font |
+| **Sassoon Primary** | Sans-serif, handwritten feel | Ages 2-4 (matches how children learn letters) | ❌ Paid |
+| **Century Schoolbook** | Serif, textbook classic | Ages 5-7 (slightly older, classic picture book) | ✅ System font |
+| **Quicksand** | Sans-serif, rounded | Ages 2-5 (modern, friendly, great for whimsy) | ✅ Google Fonts |
+
+**Rules:**
+- **14pt minimum** for body text in print (smaller = parents squint in dim bedtime light)
+- **16pt recommended** for ages 2-4
+- Never use more than 2 fonts per book (body + title/display)
+- Title font can be more expressive (handwritten, decorative), body must be readable
+- Line height ≥ 1.8 for young readers (generous spacing aids tracking)
+- Dark text on light background ONLY (avoid light text on dark — hard to read by lamplight)
 
 ## KDP Specifications
 

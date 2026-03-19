@@ -125,6 +125,7 @@ For each image generated:
 ## QC Checklist — Spread [N]
 
 - [ ] Character face matches anchor image
+- [ ] **Eyes focused on same point** (no cross-eyed or wandering gaze — #1 AI art complaint)
 - [ ] Character outfit/colors correct
 - [ ] Character proportions correct (head size, limb length)
 - [ ] No extra fingers or malformed hands
@@ -181,9 +182,15 @@ For each final image, document required post-processing:
 ## Post-Processing: Spread [N]
 
 - [ ] Upscale to 300dpi at 8.5" × 8.5" (2550 × 2550px minimum)
+      → FLUX 1.1 Pro outputs 2048×2048 native (sufficient with minor upscale)
+      → DALL-E 3 outputs max 1024×1792 (MUST upscale — use Real-ESRGAN 4x)
+      → Midjourney outputs 1024×1024 default (upscale with --upbeta or external)
+- [ ] Upscaling tool: Real-ESRGAN (free, CLI) or Topaz Gigapixel (paid, best)
+      → `realesrgan-ncnn-vulkan -i input.png -o output.png -s 4 -n realesrgan-x4plus-anime`
 - [ ] Color profile: sRGB (for digital) / CMYK (for print)
 - [ ] Add 0.125" bleed on all sides (for KDP print)
 - [ ] No compression artifacts visible at 100% zoom
+- [ ] No eye direction issues at full resolution (re-check after upscaling)
 - [ ] File format: PNG (lossless) or TIFF
 ```
 
