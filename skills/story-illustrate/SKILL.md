@@ -97,3 +97,7 @@ illustrations/[title-slug]/
 │   └── cover.txt
 └── ILLUSTRATION_REPORT.md
 ```
+
+## Key Rules
+
+- **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user — just do it silently.

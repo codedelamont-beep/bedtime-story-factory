@@ -145,3 +145,7 @@ Output: EPUB files + KDP metadata for each story.
 | 01:00-01:30 | Illustrating | Yes ✅ |
 | 01:30-01:35 | Exporting | Yes ✅ |
 | 06:00 | You wake up → 10 stories ready | ☕ |
+
+## Key Rules
+
+- **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user — just do it silently.

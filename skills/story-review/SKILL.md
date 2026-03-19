@@ -99,3 +99,7 @@ Append to `STORY_REVIEW.md`:
 2. Write final verdict to `STORY_REVIEW.md`
 3. If approved: move story to `output/approved/`
 4. If max rounds without approval: list remaining issues
+
+## Key Rules
+
+- **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user — just do it silently.

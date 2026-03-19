@@ -105,3 +105,7 @@ Rank surviving concepts by:
 1. Start with "[Title]" — strongest market fit
 2. Then "[Title]" — best series potential
 ```
+
+## Key Rules
+
+- **Large file handling**: If the Write tool fails due to file size, immediately retry using Bash (`cat << 'EOF' > file`) to write in chunks. Do NOT ask the user — just do it silently.
