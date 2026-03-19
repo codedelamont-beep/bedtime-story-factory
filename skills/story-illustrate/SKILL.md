@@ -19,7 +19,59 @@ Generate illustrations for: **$ARGUMENTS**
 - ASPECT_RATIO_COVER = "2:3" (tall for front cover)
 - DPI = 300 (print-ready)
 - MIN_RESOLUTION = "2048x2048" (interior), "2048x3072" (cover)
-- IMAGE_TOOL = "dall-e-3" (or "midjourney", "neolemon", "flux")
+- IMAGE_TOOL = "flux" (recommended) or "dall-e-3", "midjourney", "ideogram", "neolemon"
+
+## Model Selection Guide
+
+Choose the right model for the job:
+
+| Model | Best For | Character Consistency | Speed | Cost |
+|-------|----------|----------------------|-------|------|
+| **FLUX 1.1 Pro** ⭐ | Watercolor/painterly, character consistency | ⭐⭐⭐⭐⭐ (multi-ref conditioning) | 4.5s/image | ~$0.04/img |
+| **Ideogram** | Pages with text/signs/labels in scene | ⭐⭐⭐⭐ | 8s/image | ~$0.05/img |
+| **DALL-E 3** | Quick prototyping, prompt adherence | ⭐⭐⭐ | 15s/image | ~$0.04/img |
+| **Midjourney v6** | Artistic quality, stylized looks | ⭐⭐⭐⭐ (--cref flag) | 30s/image | ~$0.01/img |
+| **Neolemon** | End-to-end with action editor | ⭐⭐⭐⭐⭐ (built-in) | varies | $30-60/book |
+
+### Model-Specific Instructions
+
+#### FLUX 1.1 Pro (Recommended)
+```
+API: https://api.bfl.ml/v1/flux-pro-1.1
+Character consistency: Use multi-reference conditioning
+  → Upload 2-3 anchor images as "reference_images"
+  → Set "reference_strength": 0.75 (balance consistency vs creativity)
+Prompt suffix: "children's picture book illustration, soft watercolor edges"
+Output: 2048×2048 native (no upscaling needed)
+Important: FLUX respects hex color codes in prompts
+```
+
+#### Ideogram
+```
+API: https://api.ideogram.ai/generate
+Best use case: When illustration contains readable text (signs, labels, book spines)
+Text accuracy: 90%+ (far better than any other model)
+Prompt suffix: "children's book illustration, clean edges"
+Use for: Title page, cover (where title text appears in scene), any scene with signs
+```
+
+#### DALL-E 3 (via OpenAI API)
+```
+API: https://api.openai.com/v1/images/generations
+model: "dall-e-3"
+quality: "hd"
+Character consistency: NO native support → must describe character fully in every prompt
+Prompt style: Be extremely verbose with character description (DALL-E 3 follows instructions well)
+Limitation: Max 1024×1792 native → requires upscaling for 300dpi print
+```
+
+#### Midjourney v6+ (via API or Discord)
+```
+Character consistency: --cref [anchor_image_url] --cw 100
+Style lock: --sref [style_reference_url] --sw 100
+Prompt suffix: --ar 1:1 --q 2 --s 750
+Important: Keep prompts under 60 words (Midjourney works better with shorter prompts)
+```
 
 ## Workflow
 

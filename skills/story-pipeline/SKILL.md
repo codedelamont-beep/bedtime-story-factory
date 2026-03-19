@@ -61,12 +61,12 @@ Stage 1     Stage 2      Stage 3         Stage 3.5       Stage 4         Stage 5
 Research → Concepts → Originality →   Bridge     →  Write Each  → Review Each → Improve Each →
 (5 min)    (5 min)    (5 min)       (5 min)       (5 min each)  (10 min each)  (5 min each)
 
- Stage 7            Stage 8            Stage 9       Stage 10      Stage 11
-→ Char Bible  →  Illustrate Each  →  Layout Each  → Export All → Series Wrap
-  (10 min)       (5 min each)       (5 min each)    (2 min)      (5 min)
+ Stage 6.5           Stage 7            Stage 8            Stage 9       Stage 10      Stage 11
+→ Beta Test   → Char Bible  →  Illustrate Each  →  Layout Each  → Export All → Series Wrap
+  (3 min each)  (10 min)       (5 min each)       (5 min each)    (2 min)      (5 min)
 ```
 
-**Total for 10 stories: ~6-7 hours. Perfect for overnight.**
+**Total for 10 stories: ~7-8 hours. Perfect for overnight.**
 
 ### Stage 1: Research
 
@@ -133,9 +133,20 @@ For each reviewed story that scored < 9/10:
 Output: `stories/[title-slug]_v2_improved.md`. 2 rounds of craft-focused polishing.
 Skip if story already scored >= 9/10 after review (diminishing returns).
 
+### Stage 6.5: Beta Test (batch)
+
+For each improved story, simulate 5 reader personas:
+```
+/story-beta-test "stories/[title-slug]_v2_improved.md"
+```
+
+Output: `BETA_TEST_REPORT.md`. If 4+/5 personas recommend → proceed. If 3/5 → one more improvement round. If ≤2/5 → send back to improvement loop.
+
+Skip if `HUMAN_CHECKPOINT = false` AND story scored >= 9/10 (fast-track high scorers).
+
 ### Stage 7: Character Bible (batch)
 
-For each approved story (or series), create character bible:
+For each beta-approved story (or series), create character bible:
 ```
 /story-character-bible "stories/[title-slug]_v2_improved.md"
 ```

@@ -16,15 +16,17 @@ Workflow 1.5: Bridge             /story-bridge (validates concepts before writin
 Workflow 2: Production           /story-writing (references CRAFT_GUIDE.md)
 Workflow 3a: Review              /story-review (craft-focused criteria) OR /story-review-llm
 Workflow 3b: Polish              /story-improvement-loop
+Workflow 3c: Validate            /story-beta-test (5 persona simulation)
 Workflow 4a: Character           /story-character-bible (anchor images + style lock)
 Workflow 4b: Illustration        /story-illustrate (actual image generation with QC)
 Workflow 4c: Layout              /story-layout (fixed-layout EPUB + print-ready PDF)
 Workflow 4d: Export              /story-export (KDP-compliant, AI disclosure, pricing)
 Workflow S: Series               /story-series (multi-book production)
+Workflow M: Monitor              /story-market-monitor (post-publish optimization)
 Workflow N: Notify               /story-notify (called throughout)
 Workflow A: Analytics            /story-analytics (production dashboard)
 
-Full Pipeline: /story-pipeline   chains 1 → 1.5 → 2 → 3a → 3b → 4a → 4b → 4c → 4d
+Full Pipeline: /story-pipeline   chains 1 → 1.5 → 2 → 3a → 3b → 3c → 4a → 4b → 4c → 4d
 ```
 
 ```mermaid
@@ -36,7 +38,8 @@ graph LR
     D -->|SKIP| C
     E -->|"craft guide"| F["/story-review"]
     F --> G["/story-improvement-loop"]
-    G --> CB["/story-character-bible"]
+    G --> BT["/story-beta-test"]
+    BT --> CB["/story-character-bible"]
     CB --> H["/story-illustrate"]
     H --> L["/story-layout"]
     L --> I["/story-export"]
@@ -48,6 +51,7 @@ graph LR
     style CB fill:#ab47bc,stroke:#333,color:#fff
     style H fill:#ab47bc,stroke:#333,color:#fff
     style L fill:#ab47bc,stroke:#333,color:#fff
+    style BT fill:#26a69a,stroke:#333,color:#fff
 ```
 
 ## Quick Commands
@@ -62,11 +66,13 @@ graph LR
 | `/story-review "file.md"` | 3a only | Review with craft criteria |
 | `/story-review-llm "file.md"` | 3a only | Review via cheap LLM (craft criteria) |
 | `/story-improvement-loop "file.md"` | 3b only | Multi-round craft polishing |
+| `/story-beta-test "file.md"` | 3c only | 5-persona reader simulation |
 | `/story-character-bible "file.md"` | 4a only | Anchor images + style lock |
 | `/story-illustrate "file.md"` | 4b only | Generate actual illustrations |
 | `/story-layout "file.md"` | 4c only | Fixed-layout EPUB + print PDF |
 | `/story-export` | 4d only | KDP-compliant export |
 | `/story-series "name"` | S only | Series bible + sequel hooks |
+| `/story-market-monitor "title"` | M only | Post-publish sales/review tracking |
 | `/story-notify "msg"` | Notify | Send LINE push notification |
 | `/story-analytics` | Analytics | Production dashboard |
 
@@ -147,20 +153,22 @@ When `HUMAN_CHECKPOINT = false` (default): auto-proceed with all fixes.
 ```
 bedtime-story-factory/
 ├── CLAUDE.md              ← You are here (agent instructions)
-├── skills/                ← 16 SKILL.md files (the brain)
-│   ├── story-research/        Workflow 1: market research
-│   ├── story-concept/         Workflow 1: concept generation
+├── skills/                ← 18 SKILL.md files (the brain)
+│   ├── story-research/        Workflow 1: market + craft research
+│   ├── story-concept/         Workflow 1: concept gen + craft feasibility
 │   ├── originality-check/     Workflow 1: deduplication
 │   ├── story-bridge/          Workflow 1.5: concept validation
 │   ├── story-writing/         Workflow 2: craft-driven story generation
 │   ├── story-review/          Workflow 3a: craft-focused review (10 criteria)
 │   ├── story-review-llm/      Workflow 3a: cheap LLM review (same criteria)
 │   ├── story-improvement-loop/ Workflow 3b: craft polishing
+│   ├── story-beta-test/       Workflow 3c: 5-persona reader simulation
 │   ├── story-character-bible/  Workflow 4a: anchor images + style lock
 │   ├── story-illustrate/      Workflow 4b: actual image generation + QC
 │   ├── story-layout/          Workflow 4c: fixed-layout EPUB + print PDF
 │   ├── story-export/          Workflow 4d: KDP-compliant export
 │   ├── story-series/          Workflow S: multi-book production
+│   ├── story-market-monitor/  Workflow M: post-publish optimization
 │   ├── story-notify/          LINE push notifications
 │   ├── story-analytics/       Production dashboard
 │   └── story-pipeline/        Full overnight orchestrator
@@ -202,12 +210,12 @@ This enables overnight batch analysis: which stories improved most, which criter
 ## Production At a Glance
 
 ```
-Skills:     16 (15 story skills + 1 analytics)
+Skills:     18 (17 story skills + 1 analytics)
 References: 1 (CRAFT_GUIDE.md — 10 craft techniques)
 MCP servers: 2 (llm-chat + line-notify)
 Docs:        4 guides
 Styles:      1 EPUB stylesheet
-Pipeline:    11 stages, overnight-ready
+Pipeline:    12 stages, overnight-ready
 Recovery:    state files + idempotent stage checks
-Monitoring:  LINE Notify + NOTIFICATION_LOG.md
+Monitoring:  LINE Notify + NOTIFICATION_LOG.md + market-monitor
 ```
