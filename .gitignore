@@ -1,0 +1,22 @@
+# Output
+output/
+*.epub
+*.pdf
+*.mobi
+
+# State
+REVIEW_STATE.json
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Env
+.env
+.env.local
+
+# Node
+node_modules/
