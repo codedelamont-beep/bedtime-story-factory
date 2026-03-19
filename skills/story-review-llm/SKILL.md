@@ -50,7 +50,9 @@ Add to `~/.claude/settings.json`:
 
 ## Review Loop
 
-### Phase A: Send to Reviewer
+### Phase A: Send to Reviewer (Round 1)
+
+**Save the conversation context** — Round 2 needs to build on Round 1.
 
 **If MCP available:**
 ```
@@ -76,25 +78,83 @@ mcp__llm-chat__chat:
     Specific fixes (ranked by impact):
 ```
 
+**Save the response** and store conversation context in `REVIEW_STATE.json`:
+```json
+{
+  "conversation_history": [
+    {"role": "system", "content": "You are a children's book editor..."},
+    {"role": "user", "content": "[round 1 prompt]"},
+    {"role": "assistant", "content": "[round 1 response]"}
+  ]
+}
+```
+
 **If MCP NOT available (curl fallback):**
 ```bash
+# Round 1 — save messages for reuse
+MESSAGES='[
+  {"role": "system", "content": "You are a children's book editor..."},
+  {"role": "user", "content": "[review prompt]"}
+]'
+
 curl -s "${LLM_BASE_URL}/chat/completions" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${LLM_API_KEY}" \
-  -d '{
-    "model": "'${LLM_MODEL}'",
-    "messages": [
-      {"role": "system", "content": "You are a children's book editor..."},
-      {"role": "user", "content": "[review prompt]"}
-    ],
-    "max_tokens": 4096
-  }'
+  -d "{\"model\": \"${LLM_MODEL}\", \"messages\": ${MESSAGES}, \"max_tokens\": 4096}"
+
+# Save the assistant response for Round 2 context
 ```
+
+### Phase A2: Send to Reviewer (Round 2+) — WITH CONTEXT
+
+**CRITICAL:** Do NOT send a fresh prompt. Include previous conversation history.
+
+**If MCP available:**
+```
+mcp__llm-chat__chat:
+  system: "You are a children's book editor specializing in bedtime stories."
+  prompt: |
+    [Previous conversation context from REVIEW_STATE.json]
+
+    --- ROUND 2 UPDATE ---
+
+    Since your last review, we implemented these fixes:
+    1. [Fix 1]: [description]
+    2. [Fix 2]: [description]
+
+    Here is the updated story:
+
+    [Full updated story text]
+
+    Please re-score using the same 8 criteria.
+    Note what improved and what still needs work.
+    
+    Overall score: X/10
+    Verdict: READY / ALMOST / NEEDS WORK
+```
+
+**If MCP NOT available (curl fallback):**
+```bash
+# Round 2+ — include full conversation history
+MESSAGES='[
+  {"role": "system", "content": "You are a children's book editor..."},
+  {"role": "user", "content": "[round 1 prompt]"},
+  {"role": "assistant", "content": "[round 1 response]"},
+  {"role": "user", "content": "Since your last review, we changed: [fixes]. Here is the updated story: [text]. Re-score."}
+]'
+
+curl -s "${LLM_BASE_URL}/chat/completions" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${LLM_API_KEY}" \
+  -d "{\"model\": \"${LLM_MODEL}\", \"messages\": ${MESSAGES}, \"max_tokens\": 4096}"
+```
+
+This ensures Round 2 knows what was changed and can assess improvement accurately.
 
 ### Phase B: Parse & Decide
 
 - Score >= 8 AND "READY" → STOP, approved
-- Score 6-7 AND "ALMOST" → implement fixes, re-review
+- Score 6-7 AND "ALMOST" → implement fixes, re-review (with context)
 - Score < 6 → significant rewrite
 
 ### Phase C: Implement Fixes
@@ -110,7 +170,7 @@ Priority order:
 
 Append to `STORY_REVIEW.md` with scores, fixes, raw response.
 
-Update `REVIEW_STATE.json` with current state.
+Update `REVIEW_STATE.json` with current state AND updated conversation history.
 
 ### Phase E: Score Progression Tracking
 

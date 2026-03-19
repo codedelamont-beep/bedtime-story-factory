@@ -25,12 +25,12 @@ End-to-end story production for: **$ARGUMENTS**
 ## Pipeline
 
 ```
-Stage 1    Stage 2      Stage 3         Stage 4       Stage 5      Stage 6      Stage 7
-Research → Concepts → Originality → Write Each → Review Each → Illustrate → Export All
-(5 min)    (5 min)    (5 min)       (5 min each)  (10 min each) (3 min each) (2 min)
+Stage 1     Stage 2      Stage 3         Stage 3.5       Stage 4         Stage 5        Stage 6          Stage 7      Stage 8
+Research → Concepts → Originality →   Bridge     →  Write Each  → Review Each → Improve Each → Illustrate → Export All
+(5 min)    (5 min)    (5 min)       (5 min)       (5 min each)  (10 min each)  (5 min each)   (3 min each) (2 min)
 ```
 
-**Total for 10 stories: ~3-4 hours. Perfect for overnight.**
+**Total for 10 stories: ~4-5 hours. Perfect for overnight.**
 
 ### Stage 1: Research
 
@@ -58,6 +58,17 @@ Output: `CONCEPT_REPORT.md` with 10+ ranked concepts.
 
 Output: `ORIGINALITY_REPORT.md`. Replace any REJECTED concepts with new ones.
 
+### Stage 3.5: Bridge Validation (NEW)
+
+```
+/story-bridge
+```
+
+Output: `BRIDGE_REPORT.md` with GO / MODIFY / SKIP per concept.
+Only concepts marked **GO** proceed to writing. This prevents wasting write time on weak concepts.
+
+**Gate 2** (if AUTO_PROCEED=false): Present bridge report, wait for approval.
+
 ### Stage 4: Story Writing (batch)
 
 For each approved concept (up to MAX_STORIES):
@@ -65,27 +76,37 @@ For each approved concept (up to MAX_STORIES):
 /story-writing "[concept]"
 ```
 
-Output: `stories/[title-slug].md` per story.
+Output: `stories/[title-slug]_v0_draft.md` per story. (Versioned!)
 
 ### Stage 5: Auto Review (batch)
 
 For each story:
 ```
-/story-review "stories/[title-slug].md"
+/story-review "stories/[title-slug]_v0_draft.md"
 ```
 
-Output: Each story polished to score >= 8/10 or flagged for manual review.
+Output: `stories/[title-slug]_v1_reviewed.md`. Stories polished to score >= 8/10 or flagged.
 
-### Stage 6: Illustration Prompts (batch)
+### Stage 6: Improvement Loop (NEW)
 
-For each approved story:
+For each reviewed story that scored < 9/10:
 ```
-/story-illustrate "stories/[title-slug].md"
+/story-improvement-loop "stories/[title-slug]_v1_reviewed.md"
+```
+
+Output: `stories/[title-slug]_v2_improved.md`. 2 rounds of craft-focused polishing.
+Skip if story already scored >= 9/10 after review (diminishing returns).
+
+### Stage 7: Illustration Prompts (batch)
+
+For each approved story (latest version):
+```
+/story-illustrate "stories/[title-slug]_v2_improved.md"
 ```
 
 Output: `illustrations/[slug]/` with Midjourney prompts per scene.
 
-### Stage 7: Export
+### Stage 8: Export
 
 ```
 /story-export "output/approved/"
@@ -109,22 +130,24 @@ Output: EPUB files + KDP metadata for each story.
 | Research | ✅ | 10 niches found |
 | Concepts | ✅ | 12 generated, 10 survived |
 | Originality | ✅ | 10 passed, 0 rejected |
-| Writing | ✅ | 10 stories written |
-| Review | ✅ | 8 approved, 2 need manual review |
-| Illustration | ✅ | 80 scene prompts generated |
-| Export | ✅ | 8 EPUBs ready |
+| Bridge | ✅ | 8 GO, 1 MODIFY, 1 SKIP |
+| Writing | ✅ | 9 stories drafted (v0) |
+| Review | ✅ | 9 reviewed (v1), avg 7.8/10 |
+| Improve | ✅ | 7 improved (v2), avg 9.1/10 |
+| Illustration | ✅ | 72 scene prompts generated |
+| Export | ✅ | 9 EPUBs ready |
 
 ## Stories Produced
 
-| # | Title | Score | Words | Status |
-|---|-------|-------|-------|--------|
-| 1 | "[Title]" | 9/10 | 812 | ✅ Ready |
-| 2 | "[Title]" | 8/10 | 795 | ✅ Ready |
-| ... | ... | ... | ... | ... |
+| # | Title | v0 | v1 | v2 | Final | Words | Status |
+|---|-------|-----|-----|-----|-------|-------|--------|
+| 1 | "[Title]" | 5.8 | 7.4 | 9.1 | 9.1 | 812 | ✅ Ready |
+| 2 | "[Title]" | 6.2 | 8.5 | — | 8.5 | 795 | ✅ Ready |
+| ... | ... | ... | ... | ... | ... | ... | ... |
 
 ## Revenue Estimate
-- KDP ebooks (8 titles × $2.99): potential $X/mo at Y sales/day
-- Illustration packs: 80 prompts ready for Midjourney
+- KDP ebooks (9 titles × $2.99): potential $X/mo at Y sales/day
+- Illustration packs: 72 prompts ready for Midjourney
 
 ## Next Steps
 - [ ] Run Midjourney prompts (feed illustration/*.txt)
@@ -139,12 +162,14 @@ Output: EPUB files + KDP metadata for each story.
 |------|-------|------------|
 | 22:00 | Start pipeline | Not yet |
 | 22:05 | Research + Concepts done | Almost |
-| 22:10 | Originality checked | Yes ✅ |
-| 22:10-23:00 | Writing 10 stories | Yes ✅ |
-| 23:00-01:00 | Reviewing all stories | Yes ✅ |
-| 01:00-01:30 | Illustrating | Yes ✅ |
-| 01:30-01:35 | Exporting | Yes ✅ |
-| 06:00 | You wake up → 10 stories ready | ☕ |
+| 22:10 | Originality checked | Almost |
+| 22:15 | Bridge validated | Yes ✅ |
+| 22:15-23:00 | Writing 10 stories (v0) | Yes ✅ |
+| 23:00-01:00 | Reviewing all stories (v0→v1) | Yes ✅ |
+| 01:00-01:50 | Improving stories (v1→v2) | Yes ✅ |
+| 01:50-02:20 | Illustrating | Yes ✅ |
+| 02:20-02:25 | Exporting | Yes ✅ |
+| 06:00 | You wake up → stories ready | ☕ |
 
 ## State Persistence (Crash Recovery)
 
